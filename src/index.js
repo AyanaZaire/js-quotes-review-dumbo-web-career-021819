@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let formEl = document.querySelector("#new-quote-form")
   formHandler(formEl, quoteUl)
   fetchQuotes(quoteUl)
-  deleteHandler()
+
 })
 
 const fetchQuotes = (quoteUl) => {
@@ -41,6 +41,9 @@ const renderQuotes = (quoteObj) => {
         </blockquote>
       </li>
     </div>`)
+
+    deleteHandler()
+    likeHandler()
 }
 
 // When **form submit** happens, I want to make a **POST** fetch and then manipulate the DOM **by adding the quote to our quoteUl**
@@ -99,18 +102,24 @@ const deleteFetch = (id) => {
 
 // When **click on like button** happens, I want to make a **PATCH** fetch and then manipulate the DOM **by incrementing likes**
 
-document.body.addEventListener("click", likeHandler)
+const likeHandler = () => {
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.value === "btn-success") {
+      let quoteId = parseInt(event.target.getAttribute("data-id"))
+      let spanTag = event.target.querySelector('span')
+      let currentLikes = parseInt(spanTag.innerText)
 
-function likeHandler(e) {
-  if (e.target.classList.value === "btn-success") {
-    let quoteId = parseInt(event.target.getAttribute("data-id"))
-    let likeCount = parseInt(e.target.querySelector('span').innerText)
-    let newLike = ++likeCount
-    patchFetch(quoteId, newLike, e)
-  }
+      currentLikes++;
+
+      //optimistically rendering
+      // spanTag.innerText = currentLikes
+
+      patchFetch(quoteId, currentLikes, spanTag)
+    }
+  })
 }
 
-const patchFetch = (id, likeCount, e) => {
+const patchFetch = (id, likeCount, spanTag) => {
   fetch(BASE_URL + `${id}`, {
     method: "PATCH",
     headers: {
@@ -122,9 +131,8 @@ const patchFetch = (id, likeCount, e) => {
     })
   })
   .then(resp => resp.json())
-  .then(json => {
-    let updatedLikes = e.target.querySelector('span')
-    updatedLikes.innerText = likeCount
-    console.log(updatedLikes)
+  .then(quoteObj => {
+    // pessimestically rendering
+    spanTag.innerText = quoteObj.likes
   })
 }
